@@ -205,4 +205,3 @@ def plot_trials(csv):
 
 	plt.tight_layout()
 	plt.show()
-	print("hello")

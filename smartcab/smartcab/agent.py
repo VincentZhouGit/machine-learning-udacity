@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.9):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.5):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -44,9 +44,20 @@ class LearningAgent(Agent):
             self.epsilon = 0
             self.alpha = 0
         else:
-            a = 0.99
-            self.epsilon = a ** self.numOfTrainingTrial
+            # #epsilon one
+            # a = 0.99
+            # self.epsilon = a ** self.numOfTrainingTrial
+            # self.numOfTrainingTrial += 1
+
+            # #epsilon two
+            # self.numOfTrainingTrial += 1
+            # self.epsilon = float(1) / float(self.numOfTrainingTrial ** 2)
+
+            #epsilon three
+            a = 0.001
+            self.epsilon = math.exp(-a * self.numOfTrainingTrial)
             self.numOfTrainingTrial += 1
+
 
 
         return None
@@ -85,7 +96,7 @@ class LearningAgent(Agent):
         ###########
         # Calculate the maximum Q-value of all actions for a given state
 
-        maxQ = None
+        maxQ = max(self.Q[state].values())
 
         return maxQ 
 
@@ -130,7 +141,7 @@ class LearningAgent(Agent):
                 action = random.choice(self.valid_actions)
             else:
                 actions_rewards = self.Q[state]
-                maxQValue = max(actions_rewards.values())
+                maxQValue = self.get_maxQ(state)
                 result = {}
                 for action, reward in actions_rewards.iteritems():
                     if reward == maxQValue:
@@ -140,8 +151,6 @@ class LearningAgent(Agent):
                     action = result.keys()[0]
                 elif len(result) > 1:
                     action = random.choice(result.keys())
-                else:
-                    action = None
 
         return action
 
@@ -185,7 +194,7 @@ def run():
     #   verbose     - set to True to display additional output from the simulation
     #   num_dummies - discrete number of dummy agents in the environment, default is 100
     #   grid_size   - discrete number of intersections (columns, rows), default is (8, 6)
-    env = Environment()
+    env = Environment(verbose=False)
     
     ##############
     # Create the driving agent
@@ -193,7 +202,8 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent)
+    # 
+    agent = env.create_agent(LearningAgent,learning=True, epsilon=1.0,alpha=0.5)
     
     ##############
     # Follow the driving agent
@@ -208,14 +218,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True, display=False)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, optimized=True, display=True)
     
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=100, tolerance = 0.005)
+    sim.run(n_test=100, tolerance = 0.00001)
 
 
 if __name__ == '__main__':
